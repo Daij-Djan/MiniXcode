@@ -180,6 +180,9 @@
 			[schemeView setHidden:toolbarVisible || titleBarDisabled];
 			NSView *leftMostView = [[splitView subviews] objectAtIndex:0];
 			CGFloat leftMostWidth = leftMostView.bounds.size.width;
+			if (leftMostWidth == 0) {
+				leftMostWidth = 280.0; //use a default width if the navigator is hidden
+			}
 			NSView *titleView = [self windowTitleViewForWindow:window];
 			if (titleView) {
 				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 10);

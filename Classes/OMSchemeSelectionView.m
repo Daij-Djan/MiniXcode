@@ -34,6 +34,14 @@
     return self;
 }
 
+- (void)resizeSubviewsWithOldSize:(NSSize)oldBoundsSize
+{
+	[super resizeSubviewsWithOldSize:oldBoundsSize];
+	self.popUpButton.frame = NSMakeRect(0, 0, self.bounds.size.width - 20, self.bounds.size.height);
+	self.spinner.frame = NSMakeRect(self.bounds.size.width - 16, 2, 16, 16);
+	
+}
+
 - (BOOL)isOpaque
 {
 	return NO;
