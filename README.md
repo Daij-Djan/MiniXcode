@@ -2,8 +2,6 @@
 
 ## Overview
 
-***Note:*** *In its current state, this is sort of buggy and more of a proof-of-concept. Feel free to try it if you're adventurous, but expect display issues with the scheme popup.*
-
 This is a plugin that makes it easier to run Xcode without the main toolbar. It adds keyboard shortcuts for selecting the active scheme and device (`Ctrl`+`7` / `Ctrl` + `8`), and a compact popup menu in the window title bar that shows the currently selected run configuration.
 
 You can disable the popup from the _View_ menu if you find it distracting, the keyboard shortcuts will also work without it. The popup is automatically hidden when the main toolbar is visible.
