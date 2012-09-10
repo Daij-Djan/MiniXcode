@@ -185,7 +185,7 @@
 			}
 			NSView *titleView = [self windowTitleViewForWindow:window];
 			if (titleView) {
-				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 10);
+				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 20);
 			}
 			schemeView.frame = NSMakeRect(schemeView.frame.origin.x, schemeView.frame.origin.y, leftMostWidth - 80 + 20, schemeView.frame.size.height);
 		}
