@@ -62,7 +62,8 @@
 				NSWindow *window = [NSApp keyWindow];
 				OMSchemeSelectionView *schemeView = [self schemePopUpButtonContainerForWindow:window];
 				NSPopUpButton *popUpButton = schemeView.popUpButton;
-				if (schemeView && !schemeView.isHidden) {
+				BOOL toolbarVisible = [[window toolbar] isVisible];
+				if (schemeView && !toolbarVisible) {
 					NSMenuItem *selectedItem = [popUpButton selectedItem];
 					if (keyCode == 28) {
 						for (NSMenuItem *item in [[[popUpButton menu] itemArray] reverseObjectEnumerator]) {
