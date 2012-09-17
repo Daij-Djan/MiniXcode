@@ -3,11 +3,13 @@
 //  OMMiniXcode
 //
 //  Created by Ole Zorn on 09/07/12.
+//  Modified by Dominik Pich
 //
 //
 
 #import "OMMiniXcode.h"
 #import "OMSchemeSelectionView.h"
+#import "NSAttributedString+DDConvenience.h"
 
 #define SCHEME_POPUP_BUTTON_CONTAINER_TAG	456
 #define SCHEME_POPUP_BUTTON_TAG				457
@@ -27,6 +29,7 @@
 
 @implementation OMMiniXcode
 
+#pragma mark - lifecycle management
 
 + (void)pluginDidLoad:(NSBundle *)plugin
 {
@@ -40,14 +43,26 @@
 - (id)init
 {
 	if (self = [super init]) {
+        //observe path
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildProductsLocationDidChange:) name:@"IDEWorkspaceBuildProductsLocationDidChangeNotification" object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:) name:NSWindowDidBecomeKeyNotification object:nil];
+		
+        //observer window state
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:) name:NSWindowDidBecomeKeyNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(splitViewDidResizeSubviews:) name:NSSplitViewDidResizeSubviewsNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidEndLiveResize:) name:NSWindowDidEndLiveResizeNotification object:nil];
 		
+        //observe builds
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildWillStart:) name:@"IDEBuildOperationWillStartNotification" object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildDidStop:) name:@"IDEBuildOperationDidStopNotification" object:nil];
 		
+        //preload our icons
+        NSBundle *bundle = [NSBundle bundleForClass:self.class];
+        _errorImage = [bundle imageForResource:@"XCBuildErrorIcon"];
+        _warningImage = [bundle imageForResource:@"XCBuildWarningIcon"];
+        _analyzerResultImage = [bundle imageForResource:@"XCBuildAnalyzerResultIcon"];
+        _successImage = [bundle imageForResource:@"XCBuildSuccessIcon"];
+        
+        //add an entry to toggle 'us' to the view menu
 		NSMenuItem *viewMenuItem = [[NSApp mainMenu] itemWithTitle:@"View"];
 		if (viewMenuItem) {
 			[[viewMenuItem submenu] addItem:[NSMenuItem separatorItem]];
@@ -56,6 +71,7 @@
 			[[viewMenuItem submenu] addItem:toggleSchemeInTitleBarItem];
 		}
 		
+        //catch keydowns on our schemeview
 		[NSEvent addLocalMonitorForEventsMatchingMask:NSKeyDownMask handler:^NSEvent *(NSEvent *event) {
 			unsigned short keyCode = [event keyCode];
 			if ((keyCode == 26 || keyCode == 28) && [event modifierFlags] & NSControlKeyMask) {
@@ -105,7 +121,15 @@
 	}
 	return self;
 }
-	
+
+
+- (void)dealloc
+{
+    //remove all observers
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[super dealloc];
+}
+
 - (void)toggleSchemeInTitleBar:(id)sender
 {
 	BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
@@ -123,73 +147,6 @@
 		}
 	}
 	@catch (NSException *exception) { }
-}
-	
-- (BOOL)validateMenuItem:(NSMenuItem *)menuItem
-{
-	if ([menuItem action] == @selector(toggleSchemeInTitleBar:)) {
-		BOOL toolbarVisible = [[[NSApp keyWindow] toolbar] isVisible];
-		BOOL disabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
-		[menuItem setState:disabled ? NSOffState : NSOnState];
-		if (toolbarVisible) {
-			return NO;
-		}
-	}
-	return YES;
-}
-
-- (void)buildWillStart:(NSNotification *)notification
-{
-	@try {
-		NSArray *workspaceWindowControllers = [NSClassFromString(@"IDEWorkspaceWindowController") workspaceWindowControllers];
-		for (NSWindow *window in [workspaceWindowControllers valueForKey:@"window"]) {
-			OMSchemeSelectionView *schemeView = [self schemePopUpButtonContainerForWindow:window];
-			if (schemeView) {
-				[schemeView.spinner startAnimation:nil];
-			}
-		}
-	}
-	@catch (NSException *exception) { }
-}
-
-- (void)buildDidStop:(NSNotification *)notification
-{
-	@try {
-		NSArray *workspaceWindowControllers = [NSClassFromString(@"IDEWorkspaceWindowController") workspaceWindowControllers];
-		for (NSWindow *window in [workspaceWindowControllers valueForKey:@"window"]) {
-			OMSchemeSelectionView *schemeView = [self schemePopUpButtonContainerForWindow:window];
-			if (schemeView) {
-				[schemeView.spinner stopAnimation:nil];
-			}
-		}
-	}
-	@catch (NSException *exception) { }
-}
-
-- (void)splitViewDidResizeSubviews:(NSNotification *)notification
-{
-	NSSplitView *splitView = [notification object];
-	//TODO: This is a bit fragile, is there a better way to detect the navigator split view?
-	if (splitView.subviews.count == 3 && splitView.isVertical) {
-		BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
-		
-		NSWindow *window = splitView.window;
-		NSView *schemeView = [self schemePopUpButtonContainerForWindow:window];
-		if (schemeView) {
-			BOOL toolbarVisible = [[window toolbar] isVisible];
-			[schemeView setHidden:toolbarVisible || titleBarDisabled];
-			NSView *leftMostView = [[splitView subviews] objectAtIndex:0];
-			CGFloat leftMostWidth = leftMostView.bounds.size.width;
-			if (leftMostWidth == 0) {
-				leftMostWidth = 280.0; //use a default width if the navigator is hidden
-			}
-			NSView *titleView = [self windowTitleViewForWindow:window];
-			if (titleView) {
-				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 20);
-			}
-			schemeView.frame = NSMakeRect(schemeView.frame.origin.x, schemeView.frame.origin.y, leftMostWidth - 80 + 20, schemeView.frame.size.height);
-		}
-	}
 }
 
 - (void)selectDestination:(id)sender
@@ -215,6 +172,67 @@
 	}
 	@catch (NSException *exception) { }
 }
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem
+{
+	if ([menuItem action] == @selector(toggleSchemeInTitleBar:)) {
+		BOOL toolbarVisible = [[[NSApp keyWindow] toolbar] isVisible];
+		BOOL disabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
+		[menuItem setState:disabled ? NSOffState : NSOnState];
+		if (toolbarVisible) {
+			return NO;
+		}
+	}
+	return YES;
+}
+
+- (NSView *)windowTitleViewForWindow:(NSWindow *)window
+{
+	NSView *windowFrameView = [[window contentView] superview];
+	for (NSView *view in windowFrameView.subviews) {
+		if ([view isKindOfClass:NSClassFromString(@"DVTDualProxyWindowTitleView")]) {
+			return view;
+		}
+	}
+	return nil;
+}
+
+- (NSPopUpButton *)schemePopUpButtonForWindow:(NSWindow *)window
+{
+	OMSchemeSelectionView *container = [self schemePopUpButtonContainerForWindow:window];
+	return container.popUpButton;
+}
+
+- (OMSchemeSelectionView *)schemePopUpButtonContainerForWindow:(NSWindow *)window
+{
+	if ([window isKindOfClass:NSClassFromString(@"IDEWorkspaceWindow")]) {
+		NSView *windowFrameView = [[window contentView] superview];
+		OMSchemeSelectionView *popUpContainerView = [windowFrameView viewWithTag:SCHEME_POPUP_BUTTON_CONTAINER_TAG];
+		if (!popUpContainerView) {
+			
+			CGFloat buttonWidth = 200.0;
+			NSView *titleView = [self windowTitleViewForWindow:window];
+			if (titleView) {
+				buttonWidth = MIN(buttonWidth, titleView.frame.origin.x - 10 - 80);
+			}
+			
+			popUpContainerView = [[[OMSchemeSelectionView alloc] initWithFrame:NSMakeRect(80, windowFrameView.bounds.size.height - 22, buttonWidth + 174, 20)] autorelease];
+			popUpContainerView.tag = SCHEME_POPUP_BUTTON_CONTAINER_TAG;
+			popUpContainerView.autoresizingMask = NSViewMinYMargin;
+			
+			BOOL toolbarVisible = [[window toolbar] isVisible];
+			BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
+			
+			[popUpContainerView setHidden:toolbarVisible || titleBarDisabled];
+			[windowFrameView addSubview:popUpContainerView];
+			
+		}
+		return popUpContainerView;
+	}
+	return nil;
+}
+
+#pragma mark - window state & splitview callbacks
 
 - (void)windowDidEndLiveResize:(NSNotification *)notification
 {
@@ -245,6 +263,77 @@
 		}
 		@catch (NSException *exception) { }
 	}
+}
+
+- (void)splitViewDidResizeSubviews:(NSNotification *)notification
+{
+	NSSplitView *splitView = [notification object];
+	//TODO: This is a bit fragile, is there a better way to detect the navigator split view?
+	if (splitView.subviews.count == 3 && splitView.isVertical) {
+		BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
+		
+		NSWindow *window = splitView.window;
+		NSView *schemeView = [self schemePopUpButtonContainerForWindow:window];
+		if (schemeView) {
+			BOOL toolbarVisible = [[window toolbar] isVisible];
+			[schemeView setHidden:toolbarVisible || titleBarDisabled];
+			NSView *leftMostView = [[splitView subviews] objectAtIndex:0];
+			CGFloat leftMostWidth = leftMostView.bounds.size.width;
+			if (leftMostWidth == 0) {
+				leftMostWidth = 280.0; //use a default width if the navigator is hidden
+			}
+			NSView *titleView = [self windowTitleViewForWindow:window];
+			if (titleView) {
+				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 174);
+			}
+			schemeView.frame = NSMakeRect(schemeView.frame.origin.x, schemeView.frame.origin.y, leftMostWidth - 80 + 174, schemeView.frame.size.height);
+		}
+	}
+}
+
+#pragma mark - build callbacks
+
+- (void)buildWillStart:(NSNotification *)notification
+{
+	@try {
+		NSArray *workspaceWindowControllers = [NSClassFromString(@"IDEWorkspaceWindowController") workspaceWindowControllers];
+		for (NSWindow *window in [workspaceWindowControllers valueForKey:@"window"]) {
+			OMSchemeSelectionView *schemeView = [self schemePopUpButtonContainerForWindow:window];
+			if (schemeView) {
+                schemeView.spinner.hidden = NO;
+                [schemeView resizeSubviewsWithOldSize:schemeView.frame.size];
+				[schemeView.spinner startAnimation:nil];
+
+                [schemeView retain];
+                [notification.object addObserver:self
+                                      forKeyPath:@"percentComplete"
+                                         options:0
+                                         context:schemeView];
+            }
+		}
+    }
+	@catch (NSException *exception) { }
+}
+
+- (void)buildDidStop:(NSNotification *)notification
+{
+	@try {
+		NSArray *workspaceWindowControllers = [NSClassFromString(@"IDEWorkspaceWindowController") workspaceWindowControllers];
+		for (NSWindow *window in [workspaceWindowControllers valueForKey:@"window"]) {
+			OMSchemeSelectionView *schemeView = [self schemePopUpButtonContainerForWindow:window];
+			if (schemeView) {
+				[schemeView.spinner stopAnimation:nil];
+                schemeView.spinner.hidden = YES;
+                [schemeView resizeSubviewsWithOldSize:schemeView.frame.size];
+
+                [notification.object removeObserver:self
+                                         forKeyPath:@"percentComplete"
+                                            context:schemeView];
+                [schemeView release];
+			}
+		}
+	}
+	@catch (NSException *exception) { }
 }
 
 - (void)buildProductsLocationDidChange:(NSNotification *)notification
@@ -310,56 +399,65 @@
 	}
 }
 
-- (NSView *)windowTitleViewForWindow:(NSWindow *)window
-{
-	NSView *windowFrameView = [[window contentView] superview];
-	for (NSView *view in windowFrameView.subviews) {
-		if ([view isKindOfClass:NSClassFromString(@"DVTDualProxyWindowTitleView")]) {
-			return view;
-		}
-	}
-	return nil;
+- (void)build:(id)build progressedForView:(OMSchemeSelectionView*)view {
+    id complete = [build valueForKey:@"percentComplete"];
+    id log = [build valueForKey:@"buildLog"];
+    
+    // build progess string
+    NSMutableAttributedString *attributedProgress = [[NSMutableAttributedString alloc] init];
+
+    //err
+    id number = [log valueForKey:@"totalNumberOfErrors"];
+    if([number intValue]) {
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_errorImage]];
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
+    }
+    
+    //warn
+    number = [log valueForKey:@"totalNumberOfWarnings"];
+    if([number intValue]) {
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_warningImage]];
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
+    }
+
+    //analyzer
+    number = [log valueForKey:@"totalNumberOfAnalyzerWarnings"];
+    id number2 = [log valueForKey:@"totalNumberOfAnalyzerResults"];
+    number = @([number intValue]+[number2 intValue]);
+    if([number intValue]) {
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_analyzerResultImage]];
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
+    }
+
+    //add percentage if != 100
+    if([complete intValue]==100) {
+//        //add success icon if nothing
+//        if(!attributedProgress.length) {
+//            [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_successImage]];
+//        }
+    }
+    else {
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@%% ", complete]];
+    }
+    
+    view.label.attributedStringValue = attributedProgress;
 }
 
-- (NSPopUpButton *)schemePopUpButtonForWindow:(NSWindow *)window
-{
-	OMSchemeSelectionView *container = [self schemePopUpButtonContainerForWindow:window];
-	return container.popUpButton;
+#pragma mark build progress monitor via KVO
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    @try {
+        if([keyPath isEqualToString:@"percentComplete"]) {
+            [self build:object progressedForView:context];
+        }
+        else {
+            [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+        }
+    }
+    @catch (NSException *exception) {
+
+    }
 }
 
-- (OMSchemeSelectionView *)schemePopUpButtonContainerForWindow:(NSWindow *)window
-{
-	if ([window isKindOfClass:NSClassFromString(@"IDEWorkspaceWindow")]) {
-		NSView *windowFrameView = [[window contentView] superview];
-		OMSchemeSelectionView *popUpContainerView = [windowFrameView viewWithTag:SCHEME_POPUP_BUTTON_CONTAINER_TAG];
-		if (!popUpContainerView) {
-			
-			CGFloat buttonWidth = 200.0;
-			NSView *titleView = [self windowTitleViewForWindow:window];
-			if (titleView) {
-				buttonWidth = MIN(buttonWidth, titleView.frame.origin.x - 10 - 80);
-			}
-			
-			popUpContainerView = [[[OMSchemeSelectionView alloc] initWithFrame:NSMakeRect(80, windowFrameView.bounds.size.height - 22, buttonWidth + 20, 20)] autorelease];
-			popUpContainerView.tag = SCHEME_POPUP_BUTTON_CONTAINER_TAG;
-			popUpContainerView.autoresizingMask = NSViewMinYMargin;
-			
-			BOOL toolbarVisible = [[window toolbar] isVisible];
-			BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
-			
-			[popUpContainerView setHidden:toolbarVisible || titleBarDisabled];
-			[windowFrameView addSubview:popUpContainerView];
-			
-		}
-		return popUpContainerView;
-	}
-	return nil;
-}
-
-- (void)dealloc
-{
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[super dealloc];
-}
 
 @end

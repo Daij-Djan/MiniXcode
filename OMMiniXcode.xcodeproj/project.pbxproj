@@ -9,9 +9,30 @@
 /* Begin PBXBuildFile section */
 		7F2EB89C145057F200E97A87 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F2EB899145057EA00E97A87 /* AppKit.framework */; };
 		7FFE01F215FE1B3300CB8659 /* OMSchemeSelectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FFE01F115FE1B3300CB8659 /* OMSchemeSelectionView.m */; };
+		B482911A1607D7A400D20D8F /* NSAttributedString+DDConvenience.m in Sources */ = {isa = PBXBuildFile; fileRef = B48291191607D7A400D20D8F /* NSAttributedString+DDConvenience.m */; };
+		B49EF6911607E0D900CE06FF /* XCBuildErrorIcon.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = B48291141607D3CC00D20D8F /* XCBuildErrorIcon.tiff */; };
+		B49EF6921607E0D900CE06FF /* XCBuildSuccessIcon.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = B48291151607D3CC00D20D8F /* XCBuildSuccessIcon.tiff */; };
+		B49EF6931607E0D900CE06FF /* XCBuildAnalyzerResultIcon.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = B48291171607D53200D20D8F /* XCBuildAnalyzerResultIcon.tiff */; };
+		B49EF6941607E0D900CE06FF /* XCBuildWarningIcon.tiff in CopyFiles */ = {isa = PBXBuildFile; fileRef = B48291161607D3CC00D20D8F /* XCBuildWarningIcon.tiff */; };
 		DA1B5D020E64686800921439 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 089C1672FE841209C02AAC07 /* Foundation.framework */; };
 		DA37E2DC0E6291C8001BDFEF /* OMMiniXcode.m in Sources */ = {isa = PBXBuildFile; fileRef = DA37E2DB0E6291C8001BDFEF /* OMMiniXcode.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B49EF68F1607E0A600CE06FF /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				B49EF6911607E0D900CE06FF /* XCBuildErrorIcon.tiff in CopyFiles */,
+				B49EF6921607E0D900CE06FF /* XCBuildSuccessIcon.tiff in CopyFiles */,
+				B49EF6931607E0D900CE06FF /* XCBuildAnalyzerResultIcon.tiff in CopyFiles */,
+				B49EF6941607E0D900CE06FF /* XCBuildWarningIcon.tiff in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		089C1672FE841209C02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -21,6 +42,12 @@
 		7FFE01F115FE1B3300CB8659 /* OMSchemeSelectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMSchemeSelectionView.m; sourceTree = "<group>"; };
 		8D5B49B6048680CD000E48DA /* OMMiniXcode.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OMMiniXcode.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5B49B7048680CD000E48DA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B48291141607D3CC00D20D8F /* XCBuildErrorIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = XCBuildErrorIcon.tiff; path = Resources/XCBuildErrorIcon.tiff; sourceTree = "<group>"; };
+		B48291151607D3CC00D20D8F /* XCBuildSuccessIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = XCBuildSuccessIcon.tiff; path = Resources/XCBuildSuccessIcon.tiff; sourceTree = "<group>"; };
+		B48291161607D3CC00D20D8F /* XCBuildWarningIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = XCBuildWarningIcon.tiff; path = Resources/XCBuildWarningIcon.tiff; sourceTree = "<group>"; };
+		B48291171607D53200D20D8F /* XCBuildAnalyzerResultIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = XCBuildAnalyzerResultIcon.tiff; path = Resources/XCBuildAnalyzerResultIcon.tiff; sourceTree = "<group>"; };
+		B48291181607D7A400D20D8F /* NSAttributedString+DDConvenience.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSAttributedString+DDConvenience.h"; sourceTree = "<group>"; };
+		B48291191607D7A400D20D8F /* NSAttributedString+DDConvenience.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSAttributedString+DDConvenience.m"; sourceTree = "<group>"; };
 		DA37E2DB0E6291C8001BDFEF /* OMMiniXcode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMMiniXcode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -60,6 +87,10 @@
 		089C167CFE841241C02AAC07 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				B48291141607D3CC00D20D8F /* XCBuildErrorIcon.tiff */,
+				B48291151607D3CC00D20D8F /* XCBuildSuccessIcon.tiff */,
+				B48291171607D53200D20D8F /* XCBuildAnalyzerResultIcon.tiff */,
+				B48291161607D3CC00D20D8F /* XCBuildWarningIcon.tiff */,
 				8D5B49B7048680CD000E48DA /* Info.plist */,
 			);
 			name = Resources;
@@ -80,6 +111,8 @@
 				DA37E2DB0E6291C8001BDFEF /* OMMiniXcode.m */,
 				7FFE01F015FE1B3300CB8659 /* OMSchemeSelectionView.h */,
 				7FFE01F115FE1B3300CB8659 /* OMSchemeSelectionView.m */,
+				B48291181607D7A400D20D8F /* NSAttributedString+DDConvenience.h */,
+				B48291191607D7A400D20D8F /* NSAttributedString+DDConvenience.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -93,6 +126,7 @@
 			buildPhases = (
 				8D5B49B1048680CD000E48DA /* Sources */,
 				8D5B49B3048680CD000E48DA /* Frameworks */,
+				B49EF68F1607E0A600CE06FF /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -138,6 +172,7 @@
 			files = (
 				DA37E2DC0E6291C8001BDFEF /* OMMiniXcode.m in Sources */,
 				7FFE01F215FE1B3300CB8659 /* OMSchemeSelectionView.m in Sources */,
+				B482911A1607D7A400D20D8F /* NSAttributedString+DDConvenience.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

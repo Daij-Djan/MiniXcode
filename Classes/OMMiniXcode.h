@@ -12,7 +12,10 @@
 @class OMSchemeSelectionView;
 
 @interface OMMiniXcode : NSObject {
-	
+    NSImage *_errorImage;
+    NSImage *_warningImage;
+    NSImage *_analyzerResultImage;
+    NSImage *_successImage;
 }
 
 - (OMSchemeSelectionView *)schemePopUpButtonContainerForWindow:(NSWindow *)window;
