@@ -27,7 +27,9 @@
 @end
 
 
-@implementation OMMiniXcode
+@implementation OMMiniXcode {
+    id _schemeView;
+}
 
 #pragma mark - lifecycle management
 
@@ -48,7 +50,7 @@
 		
         //observer window state
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidBecomeKey:) name:NSWindowDidBecomeKeyNotification object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(splitViewDidResizeSubviews:) name:NSSplitViewDidResizeSubviewsNotification object:nil];
+//		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(splitViewDidResizeSubviews:) name:NSSplitViewDidResizeSubviewsNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowDidEndLiveResize:) name:NSWindowDidEndLiveResizeNotification object:nil];
 		
         //observe builds
@@ -66,7 +68,7 @@
 		NSMenuItem *viewMenuItem = [[NSApp mainMenu] itemWithTitle:@"View"];
 		if (viewMenuItem) {
 			[[viewMenuItem submenu] addItem:[NSMenuItem separatorItem]];
-			NSMenuItem *toggleSchemeInTitleBarItem = [[[NSMenuItem alloc] initWithTitle:@"Scheme Selection in Title Bar" action:@selector(toggleSchemeInTitleBar:) keyEquivalent:@""] autorelease];
+			NSMenuItem *toggleSchemeInTitleBarItem = [[NSMenuItem alloc] initWithTitle:@"Scheme Selection in Title Bar" action:@selector(toggleSchemeInTitleBar:) keyEquivalent:@""];
 			[toggleSchemeInTitleBarItem setTarget:self];
 			[[viewMenuItem submenu] addItem:toggleSchemeInTitleBarItem];
 		}
@@ -127,7 +129,6 @@
 {
     //remove all observers
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[super dealloc];
 }
 
 - (void)toggleSchemeInTitleBar:(id)sender
@@ -211,12 +212,12 @@
 		if (!popUpContainerView) {
 			
 			CGFloat buttonWidth = 200.0;
-			NSView *titleView = [self windowTitleViewForWindow:window];
-			if (titleView) {
-				buttonWidth = MIN(buttonWidth, titleView.frame.origin.x - 10 - 80);
-			}
+//			NSView *titleView = [self windowTitleViewForWindow:window];
+//			if (titleView) {
+//				buttonWidth = MIN(buttonWidth, titleView.frame.origin.x - 10 - 80);
+//			}
 			
-			popUpContainerView = [[[OMSchemeSelectionView alloc] initWithFrame:NSMakeRect(80, windowFrameView.bounds.size.height - 22, buttonWidth + 174, 20)] autorelease];
+			popUpContainerView = [[OMSchemeSelectionView alloc] initWithFrame:NSMakeRect(70, windowFrameView.bounds.size.height - 22, buttonWidth + 174, 20)];
 			popUpContainerView.tag = SCHEME_POPUP_BUTTON_CONTAINER_TAG;
 			popUpContainerView.autoresizingMask = NSViewMinYMargin;
 			
@@ -242,9 +243,7 @@
 		double delayInSeconds = 0.0;
 		dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
 		dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-			BOOL toolbarVisible = [[window toolbar] isVisible];
-			BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
-			[schemeView setHidden:toolbarVisible || titleBarDisabled];
+            [self handleResizeOfWindow:window];
 		});
 	}
 }
@@ -265,30 +264,19 @@
 	}
 }
 
-- (void)splitViewDidResizeSubviews:(NSNotification *)notification
+- (void)handleResizeOfWindow:(NSWindow*)window
 {
-	NSSplitView *splitView = [notification object];
-	//TODO: This is a bit fragile, is there a better way to detect the navigator split view?
-	if (splitView.subviews.count == 3 && splitView.isVertical) {
-		BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
-		
-		NSWindow *window = splitView.window;
-		NSView *schemeView = [self schemePopUpButtonContainerForWindow:window];
-		if (schemeView) {
-			BOOL toolbarVisible = [[window toolbar] isVisible];
-			[schemeView setHidden:toolbarVisible || titleBarDisabled];
-			NSView *leftMostView = [[splitView subviews] objectAtIndex:0];
-			CGFloat leftMostWidth = leftMostView.bounds.size.width;
-			if (leftMostWidth == 0) {
-				leftMostWidth = 280.0; //use a default width if the navigator is hidden
-			}
-			NSView *titleView = [self windowTitleViewForWindow:window];
-			if (titleView) {
-				leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 174);
-			}
-			schemeView.frame = NSMakeRect(schemeView.frame.origin.x, schemeView.frame.origin.y, leftMostWidth - 80 + 174, schemeView.frame.size.height);
-		}
-	}
+    NSView *schemeView = [self schemePopUpButtonContainerForWindow:window];
+    if (schemeView) {
+        BOOL titleBarDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:kOMMiniXcodeDisableSchemeSelectionInTitleBar];
+        BOOL toolbarVisible = [[window toolbar] isVisible];
+        [schemeView setHidden:toolbarVisible || titleBarDisabled];
+//        NSView *titleView = [self windowTitleViewForWindow:window];
+//        if (titleView) {
+//            leftMostWidth = MIN(leftMostWidth, titleView.frame.origin.x - 174);
+//        }
+//        schemeView.frame = NSMakeRect(schemeView.frame.origin.x, schemeView.frame.origin.y, schemeView.frame.size.width, schemeView.frame.size.height);
+    }
 }
 
 #pragma mark - build callbacks
@@ -304,11 +292,11 @@
                 [schemeView resizeSubviewsWithOldSize:schemeView.frame.size];
 				[schemeView.spinner startAnimation:nil];
 
-                [schemeView retain];
+                _schemeView = schemeView;
                 [notification.object addObserver:self
                                       forKeyPath:@"percentComplete"
                                          options:0
-                                         context:schemeView];
+                                         context:(__bridge void *)(schemeView)];
             }
 		}
     }
@@ -328,8 +316,8 @@
 
                 [notification.object removeObserver:self
                                          forKeyPath:@"percentComplete"
-                                            context:schemeView];
-                [schemeView release];
+                                            context:(__bridge void *)(schemeView)];
+                _schemeView = nil;
 			}
 		}
 	}
@@ -346,7 +334,7 @@
 				id workspaceForWindowController = [workspaceWindowController valueForKey:@"_workspace"];
 				if (workspace == workspaceForWindowController) {
 					NSPopUpButton *popUpButton = [self schemePopUpButtonForWindow:workspaceWindowController.window];
-					NSMenu *menu = [[[NSMenu alloc] init] autorelease];
+					NSMenu *menu = [[NSMenu alloc] init];
 					[menu setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 					
 					id runContextManager = [workspace valueForKey:@"runContextManager"];
@@ -354,7 +342,7 @@
 					id activeScheme = [runContextManager valueForKey:@"_activeRunContext"];
 					NSArray *runContexts = [runContextManager performSelector:@selector(runContexts)];
 					for (id scheme in runContexts) {
-						NSMenuItem *schemeItem = [[[NSMenuItem alloc] initWithTitle:[scheme valueForKey:@"name"] action:@selector(selectRunContext:) keyEquivalent:@""] autorelease];
+						NSMenuItem *schemeItem = [[NSMenuItem alloc] initWithTitle:[scheme valueForKey:@"name"] action:@selector(selectRunContext:) keyEquivalent:@""];
 						NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:scheme, @"context", nil];
 						[schemeItem setRepresentedObject:info];
 						if (scheme == activeScheme) {
@@ -365,10 +353,10 @@
 						}
 						NSArray *destinations = [scheme valueForKey:@"availableRunDestinations"];
 						if (destinations.count > 0) {
-							NSMenu *submenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+							NSMenu *submenu = [[NSMenu alloc] initWithTitle:@""];
 							[schemeItem setSubmenu:submenu];
 							for (id destination in destinations) {
-								NSMenuItem *destinationItem = [[[NSMenuItem alloc] initWithTitle:[destination valueForKey:@"fullDisplayName"] action:@selector(selectDestination:) keyEquivalent:@""] autorelease];
+								NSMenuItem *destinationItem = [[NSMenuItem alloc] initWithTitle:[destination valueForKey:@"fullDisplayName"] action:@selector(selectDestination:) keyEquivalent:@""];
 								NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:destination, @"destination", scheme, @"context", nil];
 								[destinationItem setRepresentedObject:info];
 								[destinationItem setTarget:self];
@@ -382,7 +370,7 @@
 					[menu addItem:[NSMenuItem separatorItem]];
 					NSArray *activeSchemeDestinations = [activeScheme valueForKey:@"availableRunDestinations"];
 					for (id destination in activeSchemeDestinations) {
-						NSMenuItem *destinationItem = [[[NSMenuItem alloc] initWithTitle:[destination valueForKey:@"fullDisplayName"] action:@selector(selectDestination:) keyEquivalent:@""] autorelease];
+						NSMenuItem *destinationItem = [[NSMenuItem alloc] initWithTitle:[destination valueForKey:@"fullDisplayName"] action:@selector(selectDestination:) keyEquivalent:@""];
 						NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:destination, @"destination", activeScheme, @"context", nil];
 						[destinationItem setRepresentedObject:info];
 						[destinationItem setTarget:self];
@@ -410,6 +398,7 @@
     id number = [log valueForKey:@"totalNumberOfErrors"];
     if([number intValue]) {
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_errorImage]];
+        [attributedProgress addAttribute:NSBaselineOffsetAttributeName value:@(-2) range:NSMakeRange(attributedProgress.length-1, 1)];
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
     }
     
@@ -417,6 +406,7 @@
     number = [log valueForKey:@"totalNumberOfWarnings"];
     if([number intValue]) {
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_warningImage]];
+        [attributedProgress addAttribute:NSBaselineOffsetAttributeName value:@(-2) range:NSMakeRange(attributedProgress.length-1, 1)];
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
     }
 
@@ -426,17 +416,12 @@
     number = @([number intValue]+[number2 intValue]);
     if([number intValue]) {
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_analyzerResultImage]];
+        [attributedProgress addAttribute:NSBaselineOffsetAttributeName value:@(-2) range:NSMakeRange(attributedProgress.length-1, 1)];
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@ ", number]];
     }
 
     //add percentage if != 100
-    if([complete intValue]==100) {
-//        //add success icon if nothing
-//        if(!attributedProgress.length) {
-//            [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithImage:_successImage]];
-//        }
-    }
-    else {
+    if([complete intValue]!=100) {
         [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@%% ", complete]];
     }
     
@@ -448,7 +433,7 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     @try {
         if([keyPath isEqualToString:@"percentComplete"]) {
-            [self build:object progressedForView:context];
+            [self build:object progressedForView:(__bridge OMSchemeSelectionView *)(context)];
         }
         else {
             [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];

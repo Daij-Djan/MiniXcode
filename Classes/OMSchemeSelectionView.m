@@ -66,12 +66,5 @@
 	return [self.popUpButton hitTest:[self convertPoint:aPoint fromView:self.superview]];
 }
 
-- (void)dealloc
-{
-	[_popUpButton release];
-	[_spinner release];
-    [_label release];
-	[super dealloc];
-}
 
 @end

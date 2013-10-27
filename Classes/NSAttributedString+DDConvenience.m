@@ -16,13 +16,10 @@
     NSParameterAssert(image);
     
     NSTextAttachment* attachment = [[NSTextAttachment alloc] init];
-    NSTextAttachmentCell *cell = [[NSTextAttachmentCell                                               alloc] initImageCell:image];
+    NSTextAttachmentCell *cell = [[NSTextAttachmentCell alloc] initImageCell:image];
     [attachment setAttachmentCell:cell];
-    [cell release];
     
     NSAttributedString *icon = [NSAttributedString attributedStringWithAttachment:attachment];
-    [attachment release];
-    
     return icon;
 }
 #endif
@@ -36,8 +33,7 @@
     NSString *str = [[NSString alloc] initWithFormat:format arguments:argp];
     va_end(argp);
     
-    [str autorelease];
-    return [[[NSAttributedString alloc] initWithString:str] autorelease];
+    return [[NSAttributedString alloc] initWithString:str];
 }
 
 @end
