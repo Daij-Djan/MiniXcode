@@ -422,7 +422,7 @@
 
     //add percentage if != 100
     if([complete intValue]!=100) {
-        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%@%% ", @([complete intValue])]];
+        [attributedProgress appendAttributedString:[NSAttributedString attributedStringWithFormat:@"%d%% ", [complete intValue]]];
     }
     
     view.label.attributedStringValue = attributedProgress;
