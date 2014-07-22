@@ -8,8 +8,8 @@ While building a target, a circular spinner, the current progress (%) and all ev
 
 You can disable the popup from the _View_ menu if you find it distracting, the keyboard shortcuts will also work without it. The popup is automatically hidden when the main toolbar is visible.
 
-![Screenshot](http://github.com/Daij-Djan/MiniXcode/raw/master/Screenshot.png)
-![Screenshot](http://github.com/Daij-Djan/MiniXcode/raw/master/Screenshot2.png)
+![Screenshot](https://raw.githubusercontent.com/Daij-Djan/MiniXcode/master/Screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/Daij-Djan/MiniXcode/master/Screenshot2.png)
 
 ## Installation
 
