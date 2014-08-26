@@ -211,7 +211,7 @@
 		OMSchemeSelectionView *popUpContainerView = [windowFrameView viewWithTag:SCHEME_POPUP_BUTTON_CONTAINER_TAG];
 		if (!popUpContainerView) {
 			
-			CGFloat buttonWidth = 200.0;
+			CGFloat buttonWidth = 300.0;
 //			NSView *titleView = [self windowTitleViewForWindow:window];
 //			if (titleView) {
 //				buttonWidth = MIN(buttonWidth, titleView.frame.origin.x - 10 - 80);
